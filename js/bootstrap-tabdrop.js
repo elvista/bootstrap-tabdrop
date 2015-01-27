@@ -1,9 +1,12 @@
 /* =========================================================
- * bootstrap-tabdrop.js
+	Code Modified by The Red Team
+* ========================================================= */
+
+/* =========================================================
+ * bootstrap-tabdrop.js 
  * http://www.eyecon.ro/bootstrap-tabdrop
  * =========================================================
  * Copyright 2012 Stefan Petre
- * Copyright 2014 Jose Ant. Aranda
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,128 +20,160 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * ========================================================= */
+ 
+!function( $ ) {
 
-!function ($) {
-
-	var WinResizer = (function () {
+	var WinReszier = (function(){
 		var registered = [];
 		var inited = false;
 		var timer;
-		var resize = function () {
+		var resize = function(ev) {
 			clearTimeout(timer);
 			timer = setTimeout(notify, 100);
 		};
-		var notify = function () {
-			for (var i = 0, cnt = registered.length; i < cnt; i++) {
+		var notify = function() {
+			for(var i=0, cnt=registered.length; i<cnt; i++) {
 				registered[i].apply();
 			}
 		};
 		return {
-			register: function (fn) {
+			register: function(fn) {
 				registered.push(fn);
 				if (inited === false) {
 					$(window).bind('resize', resize);
 					inited = true;
 				}
 			},
-			unregister: function (fn) {
-				var registeredFnIndex = registered.indexOf(fn);
-				if (registeredFnIndex > -1) {
-					registered.splice(registeredFnIndex, 1);
+			unregister: function(fn) {
+				for(var i=0, cnt=registered.length; i<cnt; i++) {
+					if (registered[i] == fn) {
+						delete registered[i];
+						break;
+					}
 				}
 			}
 		}
 	}());
 
-	var TabDrop = function (element, options) {
+	var TabDrop = function(element, options) {
 		this.element = $(element);
-		this.options = options;
-		this.dropdown = $('<li class="dropdown hide pull-right tabdrop"><a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="display-tab"></span><b class="caret"></b></a><ul class="dropdown-menu"></ul></li>')
-			.prependTo(this.element);
+		this.dropdown = $('<li class="dropdown hide pull-right tabdrop"><a class="dropdown-toggle" data-toggle="dropdown" href="#">'+options.text+' </a><ul class="dropdown-menu"></ul></li>')
+							.prependTo(this.element);
 		if (this.element.parent().is('.tabs-below')) {
 			this.dropdown.addClass('dropup');
 		}
-
-		var boundLayout = $.proxy(this.layout, this);
-
-		WinResizer.register(boundLayout);
-		this.element.on('click', 'li:not(.tabdrop)', boundLayout);
-
-		this.teardown = function () {
-			WinResizer.unregister(boundLayout);
-			this.element.off('click', 'li:not(.tabdrop)', boundLayout);
-		};
-
-		this.layout();
+		WinReszier.register($.proxy(this.layout, this));
+		var that = this;
+		setTimeout( function () {
+			that.layout();
+		}, 50);
 	};
 
 	TabDrop.prototype = {
 		constructor: TabDrop,
 
-		layout: function () {
-			var self = this;
-			var collection = [];
+		layout: function() {
+			var that = this;
 
-			function setDropdownText(text) {
-				self.dropdown.find('a span.display-tab').html(text);
-			}
-
-			function setDropdownDefaultText(collection) {
-				var text;
-				if (jQuery.isFunction(self.options.text)) {
-					text = self.options.text(collection);
-				} else {
-					text = self.options.text;
-				}
-				setDropdownText(text);
-			}
-
-			function checkOffsetAndPush(recursion) {
-				self.element.find('> li:not(.tabdrop)')
-					.each(function () {
-						if (this.offsetTop > self.options.offsetTop) {
+			if ($(this.element).closest('.panel-heading').length<1) {
+				var collection = [];
+				this.dropdown.removeClass('hide');
+				this.element
+					.append(this.dropdown.find('li'))
+					.find('>li')
+					.not('.tabdrop')
+					.each(function(){
+						if(this.offsetTop > 0) {
 							collection.push(this);
 						}
 					});
-
 				if (collection.length > 0) {
-					if (!recursion) {
-						self.dropdown.removeClass('hide');
-						self.dropdown.find('ul').empty();
-					}
-					self.dropdown.find('ul').prepend(collection);
-
-					if (self.dropdown.find('.active').length == 1) {
-						self.dropdown.addClass('active');
-						setDropdownText(self.dropdown.find('.active > a').html());
+					collection = $(collection);
+					this.dropdown
+						.find('ul')
+						.empty()
+						.append(collection);
+					if (this.dropdown.find('.active').length == 1) {
+						this.dropdown.addClass('active');
 					} else {
-						self.dropdown.removeClass('active');
-						setDropdownDefaultText(collection);
+						this.dropdown.removeClass('active');
 					}
-
-					collection = [];
-					checkOffsetAndPush(true);
 				} else {
-					if (!recursion) {
-						self.dropdown.addClass('hide');
-					}
+					this.dropdown.addClass('hide');
 				}
+				return;
 			}
 
-			self.element.append(self.dropdown.find('li'));
-			checkOffsetAndPush();
-		}
-	};
+			var collection = [];
+			this.dropdown.removeClass('hide');
 
-	$.fn.tabdrop = function (option) {
+			// haxoring
+			var dropdownEnabled = false;
+
+			var lis = this.element
+				.append(this.dropdown.find('li'))
+				.find('>li')
+				.not('.tabdrop');
+				// .each(function(){
+				// 	if(this.offsetTop > 0 || $(that.element)[0].offsetTop > 5) {
+				// 		// collection.push(this);
+				// 		that.dropdown
+				// 			.find('ul')
+				// 			.append(this);
+				// 		dropdownEnabled = true;
+				// 	}
+				// });
+			var headerItems = $(this.element).closest('.panel-heading').children();
+			var childrenPushedDown = false;
+			for (var i1 = headerItems.length - 1; i1 >= 0; i1--) {
+				if (headerItems[i1].offsetTop > 40)
+					childrenPushedDown = true;
+			};
+
+			for (var i = lis.length - 1; i >= 0; i--) {
+				if (lis[i].offsetTop > 0 || $(that.element)[0].offsetTop > 5 || childrenPushedDown) {
+					that.dropdown
+						.find('ul')
+						.append(lis[i]);
+
+					childrenPushedDown = false;
+					for (var i2 = headerItems.length - 1; i2 >= 0; i2--) {
+						if (headerItems[i2].offsetTop > 5)
+							childrenPushedDown = true;
+					};
+					dropdownEnabled = true;
+				}
+			};
+
+			// if (collection.length > 0) {
+			// 	collection = $(collection);
+			// 	this.dropdown
+			// 		.find('ul')
+			// 		.empty()
+			// 		.append(collection);
+			// } else {
+			// 	this.dropdown.addClass('hide');
+			// }
+			// moar haxoring ._.
+			if (this.dropdown.find('.active').length == 1) {
+				this.dropdown.addClass('active');
+			} else {
+				this.dropdown.removeClass('active');
+			}
+			if (dropdownEnabled)
+				this.dropdown.removeClass('hide');
+			else
+				this.dropdown.addClass('hide');
+		}
+	}
+
+	$.fn.tabdrop = function ( option ) {
 		return this.each(function () {
 			var $this = $(this),
 				data = $this.data('tabdrop'),
 				options = typeof option === 'object' && option;
-			if (!data) {
-				options = $.extend({}, $.fn.tabdrop.defaults, options);
-				data = new TabDrop(this, options);
-				$this.data('tabdrop', data);
+			if (!data)  {
+				$this.data('tabdrop', (data = new TabDrop(this, $.extend({}, $.fn.tabdrop.defaults,options))));
 			}
 			if (typeof option == 'string') {
 				data[option]();
@@ -147,10 +182,9 @@
 	};
 
 	$.fn.tabdrop.defaults = {
-		text: '<i class="fa fa-align-justify"></i>',
-		offsetTop: 0
+		text: '<i class="fa fa-angle-down"></i>'
 	};
 
 	$.fn.tabdrop.Constructor = TabDrop;
 
-}(window.jQuery);
+}( window.jQuery );

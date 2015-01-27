@@ -3,6 +3,9 @@ bootstrap-tabdrop
 
 A dropdown tab tool for @twitter bootstrap forked from Stefan Petre's (of eyecon.ro), improvements by @jschab
 
+*NOTE:* This fork is a modification to support The Red Team theme, [Avalon](http://avalon.redteamux.com/).
+_________
+
 The dropdown tab appears when your tabs do not all fit in the same row.
 
 Original site and examples: http://www.eyecon.ro/bootstrap-tabdrop/ 
